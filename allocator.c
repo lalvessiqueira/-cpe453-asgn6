@@ -3,11 +3,14 @@
 #include <string.h>
 struct Process{
    unsigned long startAddress;
-   unsigned long addressSize;
+   unsigned long endAddress;
    char processID[3];
+   Process * next;
 }Process;
 
 void request(){
+   //First fit: Leticia
+   //Best fit: Thomas
    printf("Request\n");
 }
 void release(){
