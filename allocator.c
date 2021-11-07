@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 struct Process{
    unsigned long startAddress;
    unsigned long endAddress;
    char processID[3];
-   Process * next;
+   struct Process *next; 
 }Process;
 
 void request(){
