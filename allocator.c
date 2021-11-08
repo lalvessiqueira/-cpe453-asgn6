@@ -30,11 +30,11 @@ unsigned long limit;
  * a best-fit approach.
  */
 
-void firstFit(char *processID, unsigned long memSpace){
+void firstFit(char *processID, unsigned long memSpace, Process * cur){
    Process *temp;
    Process *curr = head;
    unsigned long left_over_space = 0;
-   Process *newProcess = (Process *) malloc (sizeof(Process));
+   Process *newProcess = cur;
    strcpy(newProcess->processID, processID);
    if (head == NULL) {
       //then add it as the first node
@@ -55,7 +55,7 @@ void firstFit(char *processID, unsigned long memSpace){
             temp = curr;
             temp->next = newProcess;
             newProcess->next = curr->next;
-            print("Process added successfully!");
+            printf("Process added successfully!");
             return;
          }
          curr = curr->next;
@@ -67,16 +67,51 @@ void firstFit(char *processID, unsigned long memSpace){
          temp = curr;
          temp->next = newProcess;
          newProcess->next = NULL;
-         print("Process added successfully!");
+         printf("Process added successfully!");
          return;
       }
       fprintf(stderr, "Not enough space!");
       return; 
    }
 }
-
-void worstFit(char * proc_name, unsigned long proc_size){
-   Process * cur = (Process *) malloc(sizeof(Process));
+void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
+    unsigned long small_hole = 0;
+      Process * temp = head;
+      while(temp->next){
+         unsigned long hole = temp->next->startAddress - temp->endAddress;
+         if(hole >= proc_size){
+            if(!small_hole || small_hole > hole)
+              small_hole = hole;
+         }
+         temp = temp->next;
+      }
+      if(!small_hole){
+         unsigned long new_end = temp->endAddress + proc_size + 1;
+         if(new_end >= limit){
+            fprintf(stderr, "No memory available\n");
+            return;
+         }
+         else{
+              cur->startAddress = temp->endAddress+1;
+              cur->endAddress = new_end;
+              temp->next = cur;
+              printf("Process added successfully!");
+              return;
+         }
+      }
+      while(temp->next){
+          unsigned long hole = temp->next->startAddress - temp->endAddress;
+          if(hole == small_hole){
+              cur->startAddress = temp->endAddress+1;
+              cur->endAddress = temp->next->startAddress-1;
+              cur->next = temp->next;
+              temp->next = cur;
+              printf("Process added successfully!");
+              return;
+          }
+      }
+}
+void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
    strcpy(cur->processID, proc_name);
 
    unsigned long biggest_hole = 0;
@@ -100,7 +135,7 @@ void worstFit(char * proc_name, unsigned long proc_size){
          cur->startAddress = temp->endAddress+1;
          cur->endAddress = new_end;
          temp->next = cur;
-         print("Process added successfully!");
+         printf("Process added successfully!");
          return;
       }
    }
@@ -111,13 +146,13 @@ void worstFit(char * proc_name, unsigned long proc_size){
          cur->endAddress = temp->next->startAddress-1;
          cur->next = temp->next;
          temp->next = cur;
-         print("Process added successfully!");
+         printf("Process added successfully!");
          return; 
       }
    }
 }
 
-void request(char * proc_name, unsigned long proc_size){
+void request(char * proc_name, unsigned long proc_size, char fit){
    //First fit: Leticia
    //Best fit: Thomas
    Process * cur = (Process *) malloc(sizeof(Process));
@@ -142,9 +177,18 @@ void request(char * proc_name, unsigned long proc_size){
      cur->endAddress = new_end;
      head->next = cur;
    }
-
    else{
-      //Best fit
+      if(fit == 'F')
+         firstFit(proc_name, proc_size, cur);
+      else if(fit == 'W')
+         worstFit(proc_name, proc_size, cur);
+      else if(fit == 'B')
+         bestFit(proc_name, proc_size, cur);
+      else{
+         fprintf(stderr, "Not a valid command\n");
+      }
+   }
+   /*else{
       unsigned long small_hole = 0;
       Process * temp = head;
       while(temp->next){
@@ -165,7 +209,7 @@ void request(char * proc_name, unsigned long proc_size){
               cur->startAddress = temp->endAddress+1;
               cur->endAddress = new_end;
               temp->next = cur;
-              print("Process added successfully!");
+              printf("Process added successfully!");
               return;
          }
       }
@@ -176,11 +220,11 @@ void request(char * proc_name, unsigned long proc_size){
               cur->endAddress = temp->next->startAddress-1;
               cur->next = temp->next;
               temp->next = cur;
-              print("Process added successfully!");
+              printf("Process added successfully!");
               return; 
           }
       }
-   }
+   }*/
    
 }
 void release(){
@@ -190,10 +234,14 @@ void compact(){
    printf("Compact\n");
 }
 void statistics(){
-   Process * temp = head;
-   while(temp){
-       
-   } 
+      Process * temp = head;
+      while(temp){
+           if(!temp->processID)
+             printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
+           else
+             printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
+           temp = temp->next;
+   }
 }
 int main(int argc, char ** argv){
    char * temp, * token;
@@ -216,7 +264,6 @@ int main(int argc, char ** argv){
      token = strtok(command, delim);
      int i = 0, j;
      while(token != NULL){
-        printf("%s\n",  token);
         command_line[i] = (char *) malloc(strlen(token)+1);
         command_line[i] = token;
         token = strtok(NULL, delim);
@@ -227,7 +274,8 @@ int main(int argc, char ** argv){
         if(*temp != '\0'){
            fprintf(stderr, "Unsigned number for bytes to allocate\n");
         }
-        request(command_line[1], proc_size);
+        char fit = command_line[3][0];
+        request(command_line[1], proc_size, fit);
      }
      else if(!strcmp(command_line[0], "RL"))
         release();
