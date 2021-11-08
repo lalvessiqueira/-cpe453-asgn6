@@ -8,8 +8,76 @@ typedef struct Process{
    char processID[3];
    struct Process * next;
 }Process;
+
 Process * head=NULL;
 unsigned long limit;
+
+/*
+ * First fit: Allocate the first hole that is big enough. 
+ * Searching can start either at the beginning of the set 
+ * of holes or at the location where the previous 
+ * first-fit search ended. We can stop searching as soon 
+ * as we find a free hole that is large enough.
+ * 
+ * Best fit: Allocate the smallest hole that is big enough. 
+ * Search the entire list, unless the list is ordered by size. 
+ * This strategy produces the smallest leftover hole.
+ * 
+ * Worst fit: Allocate the largest hole. 
+ * Again, search the entire list, unless it is sorted by size. 
+ * This strategy produces the largest leftover hole, which 
+ * may be more useful than the smaller leftover hole from 
+ * a best-fit approach.
+ */
+
+void firstFit(char *processID, unsigned long memSpace){
+   Process *temp;
+   Process *curr = head;
+   unsigned long left_over_space = 0;
+   Process *newProcess = (Process *) malloc (sizeof(Process));
+   strcpy(newProcess->processID, processID);
+   if (head == NULL) {
+      //then add it as the first node
+      newProcess->startAddress = 0;
+      if (memSpace > limit) {
+         fprintf(stderr, "Not enough space!");
+         return;
+      }
+      newProcess->endAddress = memSpace;
+      head = newProcess;
+      newProcess->next = NULL;
+   }
+   else {
+      while (curr->next != NULL) {
+         if ((curr->endAddress + 1) - curr->next->startAddress >= memSpace) {
+            newProcess->startAddress = curr->startAddress + 1;
+            newProcess->endAddress = curr->endAddress + memSpace;
+            temp = curr;
+            temp->next = newProcess;
+            newProcess->next = curr->next;
+            print("Process added successfully!");
+            return;
+         }
+         curr = curr->next;
+      }
+
+      if (limit - (curr->endAddress + 1) >= memSpace) {
+         newProcess->startAddress = curr->startAddress + 1;
+         newProcess->endAddress = curr->endAddress + memSpace;
+         temp = curr;
+         temp->next = newProcess;
+         newProcess->next = NULL;
+         print("Process added successfully!");
+         return;
+      }
+      fprintf(stderr, "Not enough space!");
+      return; 
+   }
+}
+
+void worstBit(){
+   
+}
 
 void request(char * proc_name, unsigned long proc_size){
    //First fit: Leticia
@@ -36,6 +104,7 @@ void request(char * proc_name, unsigned long proc_size){
      cur->endAddress = new_end;
      head->next = cur;
    }
+
    else{
       //Best fit
       unsigned long small_hole = 0;
