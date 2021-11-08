@@ -43,7 +43,7 @@ void firstFit(char *processID, unsigned long memSpace){
          fprintf(stderr, "Not enough space!");
          return;
       }
-      newProcess->endAddress = memSpace;
+      newProcess->endAddress = memSpace - 1;
       head = newProcess;
       newProcess->next = NULL;
    }
@@ -75,8 +75,46 @@ void firstFit(char *processID, unsigned long memSpace){
    }
 }
 
-void worstBit(){
-   
+void worstFit(char * proc_name, unsigned long proc_size){
+   Process * cur = (Process *) malloc(sizeof(Process));
+   strcpy(cur->processID, proc_name);
+
+   unsigned long biggest_hole = 0;
+   Process * temp = head;
+
+   while(temp->next){
+      unsigned long hole = temp->next->startAddress- temp->endAddress;
+      if(hole >= proc_size) { 
+         if(!biggest_hole || biggest_hole <= hole)
+            biggest_hole = hole;
+      }
+      temp = temp->next;
+   }
+   if(!biggest_hole){
+      unsigned long new_end = temp->endAddress + proc_size + 1;
+      if(new_end >= limit){
+         fprintf(stderr, "No memory available\n");
+         return;
+      }
+      else{
+         cur->startAddress = temp->endAddress+1;
+         cur->endAddress = new_end;
+         temp->next = cur;
+         print("Process added successfully!");
+         return;
+      }
+   }
+   while(temp->next){
+      unsigned long hole = temp->next->startAddress - temp->endAddress;
+      if(hole == biggest_hole){
+         cur->startAddress = temp->endAddress+1;
+         cur->endAddress = temp->next->startAddress-1;
+         cur->next = temp->next;
+         temp->next = cur;
+         print("Process added successfully!");
+         return; 
+      }
+   }
 }
 
 void request(char * proc_name, unsigned long proc_size){
@@ -86,18 +124,18 @@ void request(char * proc_name, unsigned long proc_size){
    strcpy(cur->processID, proc_name);
    if(!head){
       if(proc_size > limit){
-         fprintf(stderr, "No holes available\n");
+         fprintf(stderr, "No memory available\n");
          return;
       }
       cur->startAddress = 0;
-      cur->endAddress = proc_size;
+      cur->endAddress = proc_size - 1;
       head = cur;
       head->next = NULL;
    }
    else if(!head->next){
       unsigned long new_end = head->endAddress+ proc_size + 1;
       if(new_end >= limit){
-        fprintf(stderr, "No holes available\n");
+        fprintf(stderr, "No memory available\n");
         return;
      }
      cur->startAddress = head->endAddress+1;
@@ -110,7 +148,7 @@ void request(char * proc_name, unsigned long proc_size){
       unsigned long small_hole = 0;
       Process * temp = head;
       while(temp->next){
-         unsigned long hole = temp->next->startAddress- temp->endAddress;
+         unsigned long hole = temp->next->startAddress - temp->endAddress;
          if(hole >= proc_size){
             if(!small_hole || small_hole > hole)
               small_hole = hole;
@@ -118,15 +156,16 @@ void request(char * proc_name, unsigned long proc_size){
          temp = temp->next;
       }
       if(!small_hole){
-         unsigned long new_end = temp->endAddress+ proc_size + 1;
+         unsigned long new_end = temp->endAddress + proc_size + 1;
          if(new_end >= limit){
-            fprintf(stderr, "No holes available\n");
+            fprintf(stderr, "No memory available\n");
             return;
          }
          else{
               cur->startAddress = temp->endAddress+1;
               cur->endAddress = new_end;
               temp->next = cur;
+              print("Process added successfully!");
               return;
          }
       }
@@ -137,6 +176,7 @@ void request(char * proc_name, unsigned long proc_size){
               cur->endAddress = temp->next->startAddress-1;
               cur->next = temp->next;
               temp->next = cur;
+              print("Process added successfully!");
               return; 
           }
       }
