@@ -58,7 +58,6 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
    // }
    else {
       if (curr->startAddress != 0) {
-         printf("Here!");
          if (curr->startAddress >= memSpace){
             newProcess->startAddress = 0;
             newProcess->endAddress = memSpace - 1;
@@ -94,6 +93,15 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
 void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
     unsigned long small_hole = 0;
       Process * temp = head;
+      if (temp->startAddress != 0) {
+         if (temp->startAddress >= proc_size){
+            cur->startAddress = 0;
+            cur->endAddress = proc_size - 1;
+            cur->next = cur;
+            head = cur;
+            return;
+         }
+      }
       while(temp->next){
          unsigned long hole = temp->next->startAddress - temp->endAddress;
          if(hole >= proc_size){
@@ -281,25 +289,6 @@ void statistics(){
          if(temp->endAddress < limit -1)
              printf("Addresses [%lu] . . .\n", temp->endAddress +1);
       }
-// ------------
-      // while(temp->next){
-      //      if(!temp->processID)
-      //        printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
-      //      else
-      //        printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
-      //      temp = temp->next;
-      // }
-      // if(temp){
-      //    if(!temp->processID)
-      //        printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
-      //    else
-      //        printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
-         // if(temp->endAddress < limit -1)
-         //     printf("Addresses [%lu] . . .\n", temp->endAddress +1);
-      // }
-      // else{
-      //      printf("Addresses [0] . . .\n");
-      // }
 }
 
 int main(int argc, char ** argv){
