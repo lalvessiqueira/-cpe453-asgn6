@@ -130,11 +130,12 @@ void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
               return;
          }
       }
+      temp = head;
       while(temp->next){
           unsigned long hole = temp->next->startAddress - temp->endAddress;
           if(hole == small_hole){
               cur->startAddress = temp->endAddress+1;
-              cur->endAddress = temp->next->startAddress-1;
+              cur->endAddress = cur->startAddress+proc_size -1;
               cur->next = temp->next;
               temp->next = cur;
               return;
@@ -169,11 +170,12 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
          return;
       }
    }
+   temp = head;
    while(temp->next){
       unsigned long hole = temp->next->startAddress - temp->endAddress;
       if(hole == biggest_hole){
          cur->startAddress = temp->endAddress+1;
-         cur->endAddress = temp->next->startAddress-1;
+         cur->endAddress = cur->startAddress+biggest_hole-1;
          cur->next = temp->next;
          temp->next = cur;
          return; 
