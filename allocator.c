@@ -58,33 +58,40 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
    // }
    else {
       if (curr->startAddress != 0) {
+         printf("Cond 1\n");
          if (curr->startAddress >= memSpace){
             newProcess->startAddress = 0;
             newProcess->endAddress = memSpace - 1;
             newProcess->next = curr;
             head = newProcess;
+            printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
             return;
          }
       }
       while (curr->next != NULL) {
-         if ((curr->endAddress + 1) - curr->next->startAddress >= memSpace) {
-            newProcess->startAddress = curr->startAddress + 1;
-            newProcess->endAddress = curr->endAddress + memSpace;
+         if (curr->next->startAddress - (curr->endAddress + 1) >= memSpace) {
+            printf("Cond 2\n");
+            newProcess->startAddress = curr->endAddress + 1;
+            newProcess->endAddress = newProcess->startAddress + memSpace - 1;
             temp = curr;
             temp->next = newProcess;
             newProcess->next = curr->next;
+            printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
             return;
          }
          curr = curr->next;
       }
       if (limit - (curr->endAddress + 1) >= memSpace) {
+         printf("Cond 3\n");
          newProcess->startAddress = curr->endAddress + 1;
-         newProcess->endAddress = newProcess->startAddress + memSpace;
+         newProcess->endAddress = newProcess->startAddress + memSpace - 1;
          temp = curr;
          temp->next = newProcess;
          newProcess->next = NULL;
+         printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
          return;
       }
+      printf("Cond 4\n");
       fprintf(stderr, "Not enough space!");
       return; 
    }
