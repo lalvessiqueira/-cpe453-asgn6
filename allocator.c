@@ -253,21 +253,30 @@ void release(char * proc_name){
    Process * temp = head, *cur;
    if(!head){
      printf("No processes to release\n");
+     return;
    }
    else if(!head->next){
-      free(head->processID);
-      free(head);
+      printf("%s : %s\n", temp->processID, proc_name);
+      if (strcmp(temp->processID, proc_name) == 0){
+         free(head);
+         head = NULL;
+      } else {
+         printf("No processes to release\n");
+         return;
+      }
    }
    else{
+      // Process *prev = temp;
+      // Process 
       if(!strcmp(temp->processID, proc_name)){
           cur = temp;
-          head= head->next;
-          free(cur->processID);
+          head = head->next;
+         //  free(cur->processID);
           free(cur);
           return;
       }
       while(strcmp(temp->next->processID, proc_name)){
-          temp=temp->next;
+          temp = temp->next;
           if(!temp->next){
              break;
           }
@@ -275,11 +284,11 @@ void release(char * proc_name){
       if(!strcmp(temp->next->processID, proc_name)){
           cur = temp->next;
           temp->next = cur->next;
-          free(cur->processID);
+         //  free(cur->processID);
           free(cur);
       }
       else if(!strcmp(temp->processID, proc_name)){
-          free(temp->processID);
+         //  free(temp->processID);
           free(temp);
       }
       else{
@@ -302,7 +311,7 @@ void compact(){
       fprintf(stderr, "Nothing to compact\n");
       return;
    } 
-   // check if first node is zero - shift it!
+   // check if first start address is not zero - shift it!
    if (curr->startAddress != 0) {
       curr->endAddress = curr->endAddress - curr->startAddress;
       curr->startAddress = 0;
@@ -311,7 +320,7 @@ void compact(){
       // Process *temp = curr;
       unsigned long diff = curr->next->startAddress - curr->endAddress;
       if (diff != 1) {
-         curr->next->startAddress = curr->startAddress + 1;
+         curr->next->startAddress = curr->endAddress + 1;
          curr->next->endAddress = curr->next->startAddress + diff;
       }
       curr = curr->next;
@@ -321,18 +330,25 @@ void compact(){
 void statistics(){
       Process * temp = head;
       unsigned long diff = 0;
-      if (temp->startAddress != 0) {
-         printf("Addresses [%d:%lu] Unused\n", 0, temp->startAddress - 1); 
-      }
-      while (temp->next != NULL){
-         printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
-         diff = temp->next->startAddress - temp->endAddress;
-         if (diff != 1) {
-           printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress); 
+      if (head == NULL) {
+         printf("Addresses [0] . . .\n");
+      } 
+      else {
+         if (temp->startAddress != 0) {
+            printf("Addresses [%d:%lu] Unused\n", 0, temp->startAddress - 1); 
          }
-         temp = temp->next;
+         while (temp->next != NULL){
+            printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
+            diff = temp->next->startAddress - temp->endAddress;
+            if (diff != 1) {
+            printf("Addresses [%lu:%lu] Unused\n", temp->endAddress + 1, temp->next->startAddress - 1); 
+            }
+            temp = temp->next;
+         }
+         printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
+         if(temp->endAddress < limit -1)
+             printf("Addresses [%lu] . . .\n", temp->endAddress +1);
       }
-      printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
 // ------------
       // while(temp->next){
       //      if(!temp->processID)
@@ -346,8 +362,8 @@ void statistics(){
       //        printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
       //    else
       //        printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
-      //    if(temp->endAddress < limit -1)
-      //        printf("Addresses [%lu] . . .\n", temp->endAddress +1);
+         // if(temp->endAddress < limit -1)
+         //     printf("Addresses [%lu] . . .\n", temp->endAddress +1);
       // }
       // else{
       //      printf("Addresses [0] . . .\n");
@@ -389,7 +405,7 @@ int main(int argc, char ** argv){
         request(command_line[1], proc_size, fit);
      }
      else if(!strcmp(command_line[0], "RL"))
-        release(command_line[0]);
+        release(command_line[1]);
      else if(!strcmp(command_line[0], "C"))
         compact();
      else if (!strcmp(command_line[0], "STAT"))
