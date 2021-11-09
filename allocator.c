@@ -29,26 +29,14 @@ unsigned long limit = 0;
  * may be more useful than the smaller leftover hole from 
  * a best-fit approach.
  */
-int processExist(char *processID) {
-   Process *temp = head;
-   while (temp != NULL){
-      if (strcmp(temp->processID, processID) == 0){
-         return 1;
-      }
-   }
-   return 0;
-}
 
 void firstFit(char *processID, unsigned long memSpace, Process * cur){
    Process *temp;
    Process *curr = head;
-   // unsigned long left_over_space = 0;
    Process *newProcess = cur;
    strcpy(newProcess->processID, processID);
 
-   //delete this cause its already in the request function
    if (head == NULL) {
-      //then add it as the first node
       newProcess->startAddress = 0;
       if (memSpace > limit) {
          fprintf(stderr, "Not enough space!");
@@ -58,20 +46,27 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
       head = newProcess;
       newProcess->next = NULL;
    }
+   // else if(!head->next){
+   //    unsigned long new_end = head->endAddress + memSpace + 1;
+   //    if(new_end >= limit){
+   //      fprintf(stderr, "No memory available\n");
+   //      return;
+   //   }
+   //   cur->startAddress = head->endAddress+1;
+   //   cur->endAddress = new_end;
+   //   head->next = cur;
+   // }
    else {
-      // if (processExist){
-      //    while (curr != NULL) {
-      //       if (strcmp(temp->processID, processID) == 0){
-      //          newProcess->endAddress = curr->endAddress + memSpace;
-      //          // if (newProcess) 
-      //          temp = curr;
-      //          temp->next = newProcess;
-      //          newProcess->next = curr->next;
-      //          return;
-      //       }
-      //    }
-      // }
-      // do we need to check if the process exists?
+      if (curr->startAddress != 0) {
+         printf("Here!");
+         if (curr->startAddress >= memSpace){
+            newProcess->startAddress = 0;
+            newProcess->endAddress = memSpace - 1;
+            newProcess->next = curr;
+            head = newProcess;
+            return;
+         }
+      }
       while (curr->next != NULL) {
          if ((curr->endAddress + 1) - curr->next->startAddress >= memSpace) {
             newProcess->startAddress = curr->startAddress + 1;
@@ -188,16 +183,6 @@ void request(char * proc_name, unsigned long proc_size, char fit){
       head = cur;
       head->next = NULL;
    }
-   else if(!head->next){
-      unsigned long new_end = head->endAddress+ proc_size + 1;
-      if(new_end >= limit){
-        fprintf(stderr, "No memory available\n");
-        return;
-     }
-     cur->startAddress = head->endAddress+1;
-     cur->endAddress = new_end;
-     head->next = cur;
-   }
    else{
       if(fit == 'F')
          firstFit(proc_name, proc_size, cur);
@@ -209,44 +194,6 @@ void request(char * proc_name, unsigned long proc_size, char fit){
          fprintf(stderr, "Not a valid command\n");
       }
    }
-   /*else{
-      unsigned long small_hole = 0;
-      Process * temp = head;
-      while(temp->next){
-         unsigned long hole = temp->next->startAddress - temp->endAddress;
-         if(hole >= proc_size){
-            if(!small_hole || small_hole > hole)
-              small_hole = hole;
-         }
-         temp = temp->next;
-      }
-      if(!small_hole){
-         unsigned long new_end = temp->endAddress + proc_size + 1;
-         if(new_end >= limit){
-            fprintf(stderr, "No memory available\n");
-            return;
-         }
-         else{
-              cur->startAddress = temp->endAddress+1;
-              cur->endAddress = new_end;
-              temp->next = cur;
-              printf("Process added successfully!");
-              return;
-         }
-      }
-      while(temp->next){
-          unsigned long hole = temp->next->startAddress - temp->endAddress;
-          if(hole == small_hole){
-              cur->startAddress = temp->endAddress+1;
-              cur->endAddress = temp->next->startAddress-1;
-              cur->next = temp->next;
-              temp->next = cur;
-              printf("Process added successfully!");
-              return; 
-          }
-      }
-   }*/
-   
 }
 
 void release(char * proc_name){
@@ -266,12 +213,9 @@ void release(char * proc_name){
       }
    }
    else{
-      // Process *prev = temp;
-      // Process 
       if(!strcmp(temp->processID, proc_name)){
           cur = temp;
           head = head->next;
-         //  free(cur->processID);
           free(cur);
           return;
       }
@@ -284,11 +228,9 @@ void release(char * proc_name){
       if(!strcmp(temp->next->processID, proc_name)){
           cur = temp->next;
           temp->next = cur->next;
-         //  free(cur->processID);
           free(cur);
       }
       else if(!strcmp(temp->processID, proc_name)){
-         //  free(temp->processID);
           free(temp);
       }
       else{
@@ -297,27 +239,17 @@ void release(char * proc_name){
    }
 }
 
-/**
- * If the user enters the C command, your program will compact the set of holes into one larger
- * hole. For example, if you have four separate holes of size 550 KB, 375 KB, 1,900 KB, and
- * 4,500 KB, your program will combine these four holes into one large hole of size 7,325 KB.
- * There are several strategies for implementing compaction, one of which is suggested in
- * Section 9.2.3. Be sure to update the beginning address of any processes that have been
- * affected by compaction.
- */
 void compact(){
    Process *curr = head;
    if (head == NULL) {
       fprintf(stderr, "Nothing to compact\n");
       return;
    } 
-   // check if first start address is not zero - shift it!
    if (curr->startAddress != 0) {
       curr->endAddress = curr->endAddress - curr->startAddress;
       curr->startAddress = 0;
    }
    while (curr->next != NULL) {
-      // Process *temp = curr;
       unsigned long diff = curr->next->startAddress - curr->endAddress;
       if (diff != 1) {
          curr->next->startAddress = curr->endAddress + 1;
