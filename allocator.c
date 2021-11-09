@@ -9,8 +9,8 @@ typedef struct Process{
    struct Process * next;
 }Process;
 
-Process * head=NULL;
-unsigned long limit;
+Process * head = NULL;
+unsigned long limit = 0;
 
 /*
  * First fit: Allocate the first hole that is big enough. 
@@ -29,13 +29,24 @@ unsigned long limit;
  * may be more useful than the smaller leftover hole from 
  * a best-fit approach.
  */
+int processExist(char *processID) {
+   Process *temp = head;
+   while (temp != NULL){
+      if (strcmp(temp->processID, processID) == 0){
+         return 1;
+      }
+   }
+   return 0;
+}
 
 void firstFit(char *processID, unsigned long memSpace, Process * cur){
    Process *temp;
    Process *curr = head;
-   unsigned long left_over_space = 0;
+   // unsigned long left_over_space = 0;
    Process *newProcess = cur;
    strcpy(newProcess->processID, processID);
+
+   //delete this cause its already in the request function
    if (head == NULL) {
       //then add it as the first node
       newProcess->startAddress = 0;
@@ -48,6 +59,19 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
       newProcess->next = NULL;
    }
    else {
+      // if (processExist){
+      //    while (curr != NULL) {
+      //       if (strcmp(temp->processID, processID) == 0){
+      //          newProcess->endAddress = curr->endAddress + memSpace;
+      //          // if (newProcess) 
+      //          temp = curr;
+      //          temp->next = newProcess;
+      //          newProcess->next = curr->next;
+      //          return;
+      //       }
+      //    }
+      // }
+      // do we need to check if the process exists?
       while (curr->next != NULL) {
          if ((curr->endAddress + 1) - curr->next->startAddress >= memSpace) {
             newProcess->startAddress = curr->startAddress + 1;
@@ -55,25 +79,24 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
             temp = curr;
             temp->next = newProcess;
             newProcess->next = curr->next;
-            printf("Process added successfully!");
             return;
          }
          curr = curr->next;
       }
 
       if (limit - (curr->endAddress + 1) >= memSpace) {
-         newProcess->startAddress = curr->startAddress + 1;
-         newProcess->endAddress = curr->endAddress + memSpace;
+         newProcess->startAddress = curr->endAddress + 1;
+         newProcess->endAddress = newProcess->startAddress + memSpace;
          temp = curr;
          temp->next = newProcess;
          newProcess->next = NULL;
-         printf("Process added successfully!");
          return;
       }
       fprintf(stderr, "Not enough space!");
       return; 
    }
 }
+
 void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
     unsigned long small_hole = 0;
       Process * temp = head;
@@ -95,7 +118,6 @@ void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
               cur->startAddress = temp->endAddress+1;
               cur->endAddress = new_end;
               temp->next = cur;
-              printf("Process added successfully!");
               return;
          }
       }
@@ -106,11 +128,11 @@ void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
               cur->endAddress = temp->next->startAddress-1;
               cur->next = temp->next;
               temp->next = cur;
-              printf("Process added successfully!");
               return;
           }
       }
 }
+
 void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
    strcpy(cur->processID, proc_name);
 
@@ -135,7 +157,6 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
          cur->startAddress = temp->endAddress+1;
          cur->endAddress = new_end;
          temp->next = cur;
-         printf("Process added successfully!");
          return;
       }
    }
@@ -146,7 +167,6 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
          cur->endAddress = temp->next->startAddress-1;
          cur->next = temp->next;
          temp->next = cur;
-         printf("Process added successfully!");
          return; 
       }
    }
@@ -233,16 +253,29 @@ void release(){
 void compact(){
    printf("Compact\n");
 }
+
 void statistics(){
       Process * temp = head;
-      while(temp){
+      while(temp->next){
            if(!temp->processID)
              printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
            else
              printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
            temp = temp->next;
-   }
+      }
+      if(temp){
+         if(!temp->processID)
+             printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
+         else
+             printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
+         if(temp->endAddress < limit -1)
+             printf("Addresses [%lu] . . .\n", temp->endAddress +1);
+      }
+      else{
+           printf("Addresses [0] . . .\n");
+      }
 }
+
 int main(int argc, char ** argv){
    char * temp, * token;
    const char delim[3] = " \n";
