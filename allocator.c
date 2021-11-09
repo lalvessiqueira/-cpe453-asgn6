@@ -172,8 +172,10 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
 }
 
 void request(char * proc_name, unsigned long proc_size, char fit){
-   //First fit: Leticia
-   //Best fit: Thomas
+   if(fit != 'F' && fit != 'W' && fit != 'B'){
+      fprintf(stderr, "Must select a fit type\n");
+      return;
+   }
    Process * cur = (Process *) malloc(sizeof(Process));
    strcpy(cur->processID, proc_name);
    if(!head){
@@ -330,6 +332,7 @@ void statistics(){
          }
          temp = temp->next;
       }
+      printf("Addresses [%lu:%lu] Process %s\n", temp->startAddress, temp->endAddress, temp->processID);
 // ------------
       // while(temp->next){
       //      if(!temp->processID)
