@@ -83,7 +83,6 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
          }
          curr = curr->next;
       }
-
       if (limit - (curr->endAddress + 1) >= memSpace) {
          newProcess->startAddress = curr->endAddress + 1;
          newProcess->endAddress = newProcess->startAddress + memSpace;
@@ -250,8 +249,35 @@ void request(char * proc_name, unsigned long proc_size, char fit){
 void release(){
    printf("Release\n");
 }
+
+/**
+ * If the user enters the C command, your program will compact the set of holes into one larger
+ * hole. For example, if you have four separate holes of size 550 KB, 375 KB, 1,900 KB, and
+ * 4,500 KB, your program will combine these four holes into one large hole of size 7,325 KB.
+ * There are several strategies for implementing compaction, one of which is suggested in
+ * Section 9.2.3. Be sure to update the beginning address of any processes that have been
+ * affected by compaction.
+ */
 void compact(){
-   printf("Compact\n");
+   Process *curr = head;
+   if (head == NULL) {
+      fprintf(stderr, "Nothing to compact\n");
+      return;
+   } 
+   // check if first node is zero - shift it!
+   if (curr->startAddress != 0) {
+      curr->endAddress = curr->endAddress - curr->startAddress;
+      curr->startAddress = 0;
+   }
+   while (curr->next != NULL) {
+      // Process *temp = curr;
+      unsigned long diff = curr->next->startAddress - curr->endAddress;
+      if (diff != 1) {
+         curr->next->startAddress = curr->startAddress + 1;
+         curr->next->endAddress = curr->next->startAddress + diff;
+      }
+      curr = curr->next;
+   }
 }
 
 void statistics(){
