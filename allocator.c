@@ -246,8 +246,44 @@ void request(char * proc_name, unsigned long proc_size, char fit){
    }*/
    
 }
-void release(){
-   printf("Release\n");
+
+void release(char * proc_name){
+   Process * temp = head, *cur;
+   if(!head){
+     printf("No processes to release\n");
+   }
+   else if(!head->next){
+      free(head->processID);
+      free(head);
+   }
+   else{
+      if(!strcmp(temp->processID, proc_name)){
+          cur = temp;
+          head= head->next;
+          free(cur->processID);
+          free(cur);
+          return;
+      }
+      while(strcmp(temp->next->processID, proc_name)){
+          temp=temp->next;
+          if(!temp->next){
+             break;
+          }
+      }
+      if(!strcmp(temp->next->processID, proc_name)){
+          cur = temp->next;
+          temp->next = cur->next;
+          free(cur->processID);
+          free(cur);
+      }
+      else if(!strcmp(temp->processID, proc_name)){
+          free(temp->processID);
+          free(temp);
+      }
+      else{
+          fprintf(stderr, "Process Not Found\n");
+      }
+   }
 }
 
 /**
@@ -282,7 +318,22 @@ void compact(){
 
 void statistics(){
       Process * temp = head;
+      
+      if (temp->startAddress != 0) {
+         temp->endAddress = temp->endAddress - temp->startAddress;
+         temp->startAddress = 0;
+      }
+      while (temp->next != NULL){
+         unsigned long diff = temp->next->startAddress - temp->endAddress;
+         if (diff != 1) {
+           printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress); 
+         }
+         temp = temp->next;
+      }
+
+// ------------
       while(temp->next){
+
            if(!temp->processID)
              printf("Addresses [%lu:%lu] Unused\n", temp->startAddress, temp->endAddress);
            else
