@@ -46,62 +46,39 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
       head = newProcess;
       newProcess->next = NULL;
    }
-   // else if(!head->next){
-   //    unsigned long new_end = head->endAddress + memSpace + 1;
-   //    if(new_end >= limit){
-   //      fprintf(stderr, "No memory available\n");
-   //      return;
-   //   }
-   //   cur->startAddress = head->endAddress+1;
-   //   cur->endAddress = new_end;
-   //   head->next = cur;
-   // }
    else {
       if (curr->startAddress != 0) {
-         // printf("Cond 1\n");
          if (curr->startAddress >= memSpace){
             newProcess->startAddress = 0;
             newProcess->endAddress = memSpace - 1;
             newProcess->next = curr;
             head = newProcess;
-            // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
             return;
          }
       }
       while (curr->next != NULL) {
          if (curr->next->startAddress - (curr->endAddress + 1) >= memSpace) {
-            // printf("Cond 2\n");
             newProcess->startAddress = curr->endAddress + 1;
             newProcess->endAddress = newProcess->startAddress + memSpace - 1;
             temp = curr->next;
             curr->next = newProcess;
             newProcess->next = temp;
-            // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
-            // Process *curr2 = head;
-            // while (curr2 != NULL) {
-            //    printf("Process: %s\n", curr2->processID);
-            //    curr2 = curr2->next;
-            // }
             return;
          }
          curr = curr->next;
       }
       if (limit - (curr->endAddress + 1) >= memSpace) {
-         // printf("Cond 3\n");
          newProcess->startAddress = curr->endAddress + 1;
          newProcess->endAddress = newProcess->startAddress + memSpace - 1;
          temp = curr;
          temp->next = newProcess;
          newProcess->next = NULL;
-         // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
          return;
       }
-      // printf("Cond 4\n");
       fprintf(stderr, "Not enough space!");
       return; 
    }
 }
-
 void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
     unsigned long small_hole = 0;
       Process * temp = head;
@@ -132,6 +109,7 @@ void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
               cur->startAddress = temp->endAddress+1;
               cur->endAddress = new_end;
               temp->next = cur;
+              cur->next = NULL;
               return;
          }
       }
@@ -145,6 +123,7 @@ void bestFit(char * proc_name, unsigned long proc_size, Process * cur){
               temp->next = cur;
               return;
           }
+          temp = temp->next;
       }
 }
 
@@ -162,7 +141,8 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
       }
       temp = temp->next;
    }
-   if(!biggest_hole){
+   unsigned long edge = limit - temp->endAddress -1;
+   if(biggest_hole < edge){
       unsigned long new_end = temp->endAddress + proc_size + 1;
       if(new_end >= limit){
          fprintf(stderr, "No memory available\n");
@@ -170,8 +150,9 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
       }
       else{
          cur->startAddress = temp->endAddress+1;
-         cur->endAddress = new_end;
+         cur->endAddress = cur->startAddress+proc_size-1;
          temp->next = cur;
+         cur->next =NULL;
          return;
       }
    }
@@ -180,11 +161,12 @@ void worstFit(char * proc_name, unsigned long proc_size, Process * cur){
       unsigned long hole = temp->next->startAddress - temp->endAddress;
       if(hole == biggest_hole){
          cur->startAddress = temp->endAddress+1;
-         cur->endAddress = cur->startAddress+biggest_hole-1;
+         cur->endAddress = cur->startAddress+proc_size-1;
          cur->next = temp->next;
          temp->next = cur;
          return; 
       }
+      temp = temp->next;
    }
 }
 
