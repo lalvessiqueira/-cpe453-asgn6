@@ -46,6 +46,16 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
       head = newProcess;
       newProcess->next = NULL;
    }
+   // else if(!head->next){
+   //    unsigned long new_end = head->endAddress + memSpace + 1;
+   //    if(new_end >= limit){
+   //      fprintf(stderr, "No memory available\n");
+   //      return;
+   //   }
+   //   cur->startAddress = head->endAddress+1;
+   //   cur->endAddress = new_end;
+   //   head->next = cur;
+   // }
    else {
       if (curr->startAddress != 0) {
          // printf("Cond 1\n");
@@ -64,9 +74,14 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
             newProcess->startAddress = curr->endAddress + 1;
             newProcess->endAddress = newProcess->startAddress + memSpace - 1;
             temp = curr->next;
-            temp->next = newProcess;
+            curr->next = newProcess;
             newProcess->next = temp;
             // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
+            // Process *curr2 = head;
+            // while (curr2 != NULL) {
+            //    printf("Process: %s\n", curr2->processID);
+            //    curr2 = curr2->next;
+            // }
             return;
          }
          curr = curr->next;
@@ -81,7 +96,7 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
          // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
          return;
       }
-      printf("Cond 4\n");
+      // printf("Cond 4\n");
       fprintf(stderr, "Not enough space!");
       return; 
    }
