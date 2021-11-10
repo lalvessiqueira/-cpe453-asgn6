@@ -46,49 +46,39 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
       head = newProcess;
       newProcess->next = NULL;
    }
-   // else if(!head->next){
-   //    unsigned long new_end = head->endAddress + memSpace + 1;
-   //    if(new_end >= limit){
-   //      fprintf(stderr, "No memory available\n");
-   //      return;
-   //   }
-   //   cur->startAddress = head->endAddress+1;
-   //   cur->endAddress = new_end;
-   //   head->next = cur;
-   // }
    else {
       if (curr->startAddress != 0) {
-         printf("Cond 1\n");
+         // printf("Cond 1\n");
          if (curr->startAddress >= memSpace){
             newProcess->startAddress = 0;
             newProcess->endAddress = memSpace - 1;
             newProcess->next = curr;
             head = newProcess;
-            printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
+            // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
             return;
          }
       }
       while (curr->next != NULL) {
          if (curr->next->startAddress - (curr->endAddress + 1) >= memSpace) {
-            printf("Cond 2\n");
+            // printf("Cond 2\n");
             newProcess->startAddress = curr->endAddress + 1;
             newProcess->endAddress = newProcess->startAddress + memSpace - 1;
-            temp = curr;
+            temp = curr->next;
             temp->next = newProcess;
-            newProcess->next = curr->next;
-            printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
+            newProcess->next = temp;
+            // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
             return;
          }
          curr = curr->next;
       }
       if (limit - (curr->endAddress + 1) >= memSpace) {
-         printf("Cond 3\n");
+         // printf("Cond 3\n");
          newProcess->startAddress = curr->endAddress + 1;
          newProcess->endAddress = newProcess->startAddress + memSpace - 1;
          temp = curr;
          temp->next = newProcess;
          newProcess->next = NULL;
-         printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
+         // printf("Added Node:\nstart: %lu\nend: %lu\n", newProcess->startAddress, newProcess->endAddress);
          return;
       }
       printf("Cond 4\n");
