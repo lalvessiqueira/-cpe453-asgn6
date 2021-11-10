@@ -5,7 +5,7 @@
 typedef struct Process{
    unsigned long startAddress;
    unsigned long endAddress;
-   char processID[3];
+   char processID[4];
    struct Process * next;
 }Process;
 
