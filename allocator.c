@@ -39,7 +39,7 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
    if (head == NULL) {
       newProcess->startAddress = 0;
       if (memSpace > limit) {
-         fprintf(stderr, "Not enough space!");
+         fprintf(stderr, "Not enough space!\n");
          return;
       }
       newProcess->endAddress = memSpace - 1;
@@ -75,7 +75,7 @@ void firstFit(char *processID, unsigned long memSpace, Process * cur){
          newProcess->next = NULL;
          return;
       }
-      fprintf(stderr, "Not enough space!");
+      fprintf(stderr, "Not enough space!\n");
       return; 
    }
 }
